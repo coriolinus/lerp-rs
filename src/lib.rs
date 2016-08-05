@@ -1,4 +1,4 @@
-//! Linear interpolation and extrapolation
+//! Linear interpolation and extrapolation traits.
 
 extern crate num_traits;
 
