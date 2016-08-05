@@ -1,6 +1,6 @@
 # Lerp
 
-Linear interpolation and iteration, automatically implemented over most float-compatible types.
+Linear interpolation and iteration, automatically implemented over most float-compatible types. [![Build Status](https://travis-ci.org/coriolinus/lerp-rs.svg?branch=master)](https://travis-ci.org/coriolinus/lerp-rs)
 
 Just need to know what's halfway between three and five?
 
