@@ -31,4 +31,4 @@ lerp = "0.1"
 
 ## Documentation
 
-Coming soon! I've never used Github Pages before.
+Auto-built from Travis: <https://coriolinus.github.io/lerp-rs/>

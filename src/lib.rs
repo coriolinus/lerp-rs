@@ -1,4 +1,5 @@
 //! Linear interpolation and extrapolation traits.
+#![doc(html_root_url = "https://coriolinus.github.io/lerp-rs/")]
 
 extern crate num_traits;
 
