@@ -25,7 +25,7 @@ Of course, the real benefit is that it's derivation is broad enough that it also
 ## Usage
 
 ```toml
-[dependeencies]
+[dependencies]
 lerp = "0.1"
 ```
 
