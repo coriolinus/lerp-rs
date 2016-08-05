@@ -3,7 +3,7 @@
 extern crate num_traits;
 
 use std::iter;
-use std::iter::{Iterator, Skip, Chain, Once};
+use std::iter::{Skip, Chain, Once};
 use std::ops::{Add, Sub, Mul};
 use num_traits::{Float, Zero, One};
 
