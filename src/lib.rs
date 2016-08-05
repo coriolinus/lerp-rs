@@ -93,7 +93,7 @@ pub trait Lerp<F> {
 /// Types which can construct a lerping iterator from one point to another
 /// over a set number of steps.
 ///
-/// For the most part, this is automatically implemented.
+/// This is automatically implemented for all `T: Lerp<f64> + Sized`.
 pub trait LerpIter {
     /// Create an iterator which lerps from `self` to `other`.
     ///
@@ -105,8 +105,8 @@ pub trait LerpIter {
     /// use lerp::LerpIter;
     ///
     /// // lerp between 3 and 5, collecting two items
-    /// let items: Vec<f64> = 3.0_f64.lerp_iter(5.0, 2).collect();
-    /// assert_eq!(vec![3.0, 4.0], items);
+    /// let items: Vec<_> = 3.0_f64.lerp_iter(5.0, 4).collect();
+    /// assert_eq!(vec![3.0, 3.5, 4.0, 4.5], items);
     /// ```
     fn lerp_iter(self, other: Self, steps: usize) -> LerpIterator<Self> where Self: Sized;
 
