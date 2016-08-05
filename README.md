@@ -13,10 +13,16 @@ assert_eq!(3.0.lerp(5.0, 0.5), 4.0);
 Want to iterate across some points in that range?
 
 ```rust
+// bring the trait into scope
 use lerp::LerpIter;
-// lerp between 3 and 5, collecting two items
+
+// iterate and produce four items evenly spaced between 3.0 and 5.0
+// note that the default, open iterator does not include both endpoints
+// this makes chaining lerping iterators simpler
 let items: Vec<_> = 3.0_f64.lerp_iter(5.0, 4).collect();
 assert_eq!(vec![3.0, 3.5, 4.0, 4.5], items);
+
+// closed iterators return both ends
 assert_eq!(vec![3.0, 5.0], 3.0.lerp_iter_closed(5.0, 2).collect::<Vec<_>>());
 ```
 
