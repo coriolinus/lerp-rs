@@ -1,0 +1,7 @@
+[package]
+name = "lerp"
+version = "0.1.0"
+authors = ["coriolinus <coriolinus@gmail.com>"]
+
+[dependencies]
+num-traits = "0.1.34"
