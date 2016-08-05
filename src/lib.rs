@@ -1,4 +1,4 @@
-//! Linear interpolation / extrapolation
+//! Linear interpolation and extrapolation
 
 extern crate num_traits;
 
@@ -7,24 +7,43 @@ use std::iter::{Iterator, Skip, Chain, Once};
 use std::ops::{Add, Sub, Mul};
 use num_traits::Float;
 
-/// Types which are amenable to linear inter/extrapolation.
+/// Types which are amenable to linear interpolation and extrapolation.
 ///
 /// This is mainly intended to be useful for complex
 /// numbers, vectors, and other types which may be multiplied by a
 /// scalar while retaining their own type.
 pub trait Lerp<F> {
-    /// Interpolate / extrapolate between `self` and `other` using `t` as the parameter.
+    /// Interpolate and extrapolate between `self` and `other` using `t` as the parameter.
     ///
     /// At `t == 0.0`, the result is equal to `self`.
     /// At `t == 1.0`, the result is equal to `other`.
     /// At all other points, the result is a mix of `self` and `other`, proportional to `t`.
     ///
+    /// # Examples
+    ///
+    /// Basic lerping on floating points:
+    ///
     /// ```
-    /// # use julia_set::lerp::Lerp;
+    /// use lerp::Lerp;
+    ///
     /// let four_32 = 3.0_f32.lerp(5.0, 0.5);
     /// assert_eq!(four_32, 4.0);
     /// let four_64 = 3.0_f64.lerp(5.0, 0.5);
     /// assert_eq!(four_64, 4.0);
+    /// ```
+    ///
+    /// Extrapolation:
+    ///
+    /// ```
+    /// # use lerp::Lerp;
+    /// assert_eq!(3.0.lerp(4.0, 2.0), 5.0);
+    /// ```
+    ///
+    /// Negative extrapolation:
+    ///
+    /// ```
+    /// # use lerp::Lerp;
+    /// assert_eq!(3.0.lerp(4.0, -1.0), 2.0);
     /// ```
     fn lerp(self, other: Self, t: F) -> Self;
 }
@@ -41,7 +60,8 @@ pub trait LerpIter {
     /// # Example
     ///
     /// ```
-    /// # use julia_set::lerp::LerpIter;
+    /// use lerp::LerpIter;
+    ///
     /// // lerp between 3 and 5, collecting two items
     /// let items: Vec<f64> = 3.0_f64.lerp_iter(5.0, 2).collect();
     /// assert_eq!(vec![3.0, 4.0], items);
@@ -57,7 +77,8 @@ pub trait LerpIter {
     /// # Example
     ///
     /// ```
-    /// # use julia_set::lerp::LerpIter;
+    /// use lerp::LerpIter;
+    ///
     /// assert_eq!(vec![3.0, 5.0], 3.0_f64.lerp_iter_closed(5.0, 2).collect::<Vec<f64>>());
     /// ```
     fn lerp_iter_closed(self,
