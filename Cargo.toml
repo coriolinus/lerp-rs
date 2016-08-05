@@ -6,6 +6,7 @@ description = "Generic linear interpolation and extrapolation, automatically imp
 repository = "https://github.com/coriolinus/lerp-rs"
 readme = "README.md"
 license = "MIT"
+keywords = ["lerp", "math", "interpolate", "extrapolate", "numeric"]
 
 [dependencies]
 num-traits = "0.1.34"
