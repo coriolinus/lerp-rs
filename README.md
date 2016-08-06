@@ -26,7 +26,7 @@ assert_eq!(vec![3.0, 3.5, 4.0, 4.5], items);
 assert_eq!(vec![3.0, 5.0], 3.0.lerp_iter_closed(5.0, 2).collect::<Vec<_>>());
 ```
 
-Of course, the real benefit is that it's derivation is broad enough that it also covers types such as `num::Complex<T>`. If you have an array-processing library, and the arrays are `T: Copy + Add<Output = T> + Sub<Output = T> + Mul<F: Float, Output = T>`, it'll just work for them as well.
+Of course, the real benefit is that it's derivation is broad enough that it also covers types such as `num::Complex<T>`. If you have an array-processing library, and the arrays are `T: Add<Output = T> + Mul<F: Float, Output = T>`, it'll just work for them as well.
 
 ## Usage
 
