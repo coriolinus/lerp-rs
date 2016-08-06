@@ -5,7 +5,7 @@ extern crate num_traits;
 
 use std::iter;
 use std::iter::{Skip, Chain, Once};
-use std::ops::{Add, Sub, Mul};
+use std::ops::{Add, Mul};
 use num_traits::{Float, Zero, One};
 
 /// Types which are amenable to linear interpolation and extrapolation.
@@ -15,7 +15,7 @@ use num_traits::{Float, Zero, One};
 /// scalar while retaining their own type.
 ///
 /// It's automatically implemented
-/// for all `T: Copy + Add<Output = T> + Sub<Output = T> + Mul<F, Output = T>`.
+/// for all `T: Add<Output = T> + Mul<F, Output = T>`.
 pub trait Lerp<F> {
     /// Interpolate and extrapolate between `self` and `other` using `t` as the parameter.
     ///
@@ -153,11 +153,11 @@ pub trait LerpIter {
 /// numbers, vectors, and other types which may be multiplied by a
 /// scalar while retaining their own type.
 impl<T, F> Lerp<F> for T
-    where T: Copy + Add<Output = T> + Sub<Output = T> + Mul<F, Output = T>,
+    where T: Add<Output = T> + Mul<F, Output = T>,
           F: Float
 {
     fn lerp(self, other: T, t: F) -> T {
-        self + ((other - self) * t)
+        self * (F::one() - t) + other * t
     }
 }
 
