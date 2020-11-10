@@ -38,7 +38,8 @@ macro, available with the `derive` feature, which will be able to generate an
 implementation automatically. In order to use the derive macro, your structures must
 have only float type fields and all fields much be the same type (all f64 or all f32).
 
-The automatic lerp derivation will simply lerp each of the fields.
+The automatic lerp derivation will simply lerp each of the fields and works on both
+named and tuple type structs.
 
 ```toml
 [dependencies]
