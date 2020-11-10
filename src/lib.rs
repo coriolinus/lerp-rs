@@ -189,9 +189,9 @@ pub struct LerpIterator<T> {
 impl<T> LerpIterator<T> {
     fn new(begin: T, end: T, steps: usize) -> LerpIterator<T> {
         LerpIterator {
-            begin: begin,
-            end: end,
-            steps: steps,
+            begin,
+            end,
+            steps,
             current_step: 0,
         }
     }
