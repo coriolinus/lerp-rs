@@ -1,6 +1,9 @@
 //! Linear interpolation and extrapolation traits.
 #![doc(html_root_url = "https://coriolinus.github.io/lerp-rs/")]
 
+#![forbid(unsafe_code)]
+#![warn(missing_docs)]
+
 use num_traits::{Float, One, Zero};
 use std::iter;
 use std::iter::{Chain, Once, Skip};
@@ -278,7 +281,7 @@ mod test_derive {
         struct Data {
             a: f32,
             b: f32,
-        };
+        }
 
         assert_eq!(
             round(&Data { a: 0.0, b: 1.0 }.lerp(Data { a: 1.0, b: 0.0 }, 0.5)),
@@ -296,7 +299,7 @@ mod test_derive {
         struct Data {
             a: f64,
             b: f32,
-        };
+        }
 
         assert_eq!(
             round(&Data { a: 0.0, b: 1.0 }.lerp(Data { a: 1.0, b: 0.0 }, 0.5)),
@@ -317,7 +320,7 @@ mod test_derive {
         struct Data {
             a: InternalData,
             b: f32,
-        };
+        }
 
         assert_eq!(
             round(
