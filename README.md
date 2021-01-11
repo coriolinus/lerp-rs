@@ -33,6 +33,8 @@ covers types such as `num::Complex<T>`. If you have an array-processing library,
 and the arrays are `T: Add<Output = T> + Mul<F: Float, Output = T>`, it'll just
 work for them as well.
 
+## Deriving `Lerp`
+
 As well as working for individual float values, the crate also provides a derive
 macro, available with the `derive` feature, which will be able to generate an
 implementation automatically. In order to use the derive macro, your structures must
@@ -43,7 +45,7 @@ named and tuple type structs.
 
 ```toml
 [dependencies]
-lerp = { version = "0.1", features = ["derive"] }
+lerp = { version = "0.4", features = ["derive"] }
 ```
 
 ```rust
