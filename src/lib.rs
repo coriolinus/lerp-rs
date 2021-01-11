@@ -6,6 +6,8 @@ use std::iter;
 use std::iter::{Chain, Once, Skip};
 use std::ops::{Add, Mul};
 
+pub use num_traits;
+
 /// Types which are amenable to linear interpolation and extrapolation.
 ///
 /// This is mainly intended to be useful for complex
@@ -236,18 +238,29 @@ pub use lerp_derive::*;
 
 #[cfg(all(test, feature = "derive"))]
 mod test_derive {
+    use super::test::round;
     use super::Lerp;
     use std::fmt::Debug;
-
-    // Helper when working with floats to "round" them, so we can compare them better
-    fn round(d: &dyn Debug) -> String {
-        format!("{:.1?}", d)
-    }
 
     #[test]
     fn tuple() {
         #[derive(PartialEq, Debug, Lerp)]
         struct Data(f64, f64);
+
+        assert_eq!(
+            round(&Data(0.0, 1.0).lerp(Data(1.0, 0.0), 0.5)),
+            round(&Data(0.5, 0.5))
+        );
+        assert_eq!(
+            round(&Data(0.0, 1.0).lerp(Data(1.0, 0.0), 0.9)),
+            round(&Data(0.9, 0.1))
+        );
+    }
+
+    #[test]
+    fn tuple_combine_types() {
+        #[derive(PartialEq, Debug, Lerp)]
+        struct Data(f64, f32);
 
         assert_eq!(
             round(&Data(0.0, 1.0).lerp(Data(1.0, 0.0), 0.5)),
@@ -278,6 +291,86 @@ mod test_derive {
     }
 
     #[test]
+    fn named_combine_types() {
+        #[derive(PartialEq, Debug, Lerp)]
+        struct Data {
+            a: f64,
+            b: f32,
+        };
+
+        assert_eq!(
+            round(&Data { a: 0.0, b: 1.0 }.lerp(Data { a: 1.0, b: 0.0 }, 0.5)),
+            round(&Data { a: 0.5, b: 0.5 })
+        );
+        assert_eq!(
+            round(&Data { a: 0.0, b: 1.0 }.lerp(Data { a: 1.0, b: 0.0 }, 0.9)),
+            round(&Data { a: 0.9, b: 0.1 })
+        );
+    }
+
+    #[test]
+    fn nested_combine_types() {
+        #[derive(PartialEq, Debug, Lerp)]
+        struct InternalData(f64, f32);
+
+        #[derive(PartialEq, Debug, Lerp)]
+        struct Data {
+            a: InternalData,
+            b: f32,
+        };
+
+        assert_eq!(
+            round(
+                &Data {
+                    a: InternalData(0.0, 1.0),
+                    b: 1.0
+                }
+                .lerp(
+                    Data {
+                        a: InternalData(1.0, 0.0),
+                        b: 0.0
+                    },
+                    0.5
+                )
+            ),
+            round(&Data {
+                a: InternalData(0.5, 0.5),
+                b: 0.5
+            })
+        );
+        assert_eq!(
+            round(
+                &Data {
+                    a: InternalData(0.0, 1.0),
+                    b: 1.0
+                }
+                .lerp(
+                    Data {
+                        a: InternalData(1.0, 0.0),
+                        b: 0.0
+                    },
+                    0.9
+                )
+            ),
+            round(&Data {
+                a: InternalData(0.9, 0.1),
+                b: 0.1
+            })
+        );
+    }
+}
+
+#[cfg(all(test))]
+mod test {
+    use super::Lerp;
+    use std::fmt::Debug;
+
+    // Helper when working with floats to "round" them, so we can compare them better
+    fn round(d: &dyn Debug) -> String {
+        format!("{:.1?}", d)
+    }
+
+    #[test]
     fn manual() {
         #[derive(PartialEq, Debug)]
         struct Data {
@@ -301,6 +394,106 @@ mod test_derive {
         assert_eq!(
             round(&Data { a: 0.0, b: 1.0 }.lerp(Data { a: 1.0, b: 0.0 }, 0.9)),
             round(&Data { a: 0.9, b: 0.1 })
+        );
+    }
+
+    #[test]
+    fn manual_mix() {
+        #[derive(PartialEq, Debug)]
+        struct Data {
+            a: f64,
+            b: f32,
+        };
+
+        impl Lerp<f64> for Data {
+            fn lerp(self, other: Self, t: f64) -> Self {
+                Self {
+                    a: self.a.lerp(other.a, t),
+                    b: self.b.lerp(other.b, t as f32),
+                }
+            }
+        }
+
+        assert_eq!(
+            round(&Data { a: 0.0, b: 1.0 }.lerp(Data { a: 1.0, b: 0.0 }, 0.5)),
+            round(&Data { a: 0.5, b: 0.5 })
+        );
+        assert_eq!(
+            round(&Data { a: 0.0, b: 1.0 }.lerp(Data { a: 1.0, b: 0.0 }, 0.9)),
+            round(&Data { a: 0.9, b: 0.1 })
+        );
+    }
+
+    #[test]
+    fn manual_nested() {
+        #[derive(PartialEq, Debug)]
+        struct InternalData(f64, f32);
+
+        impl<F: crate::Float> Lerp<F> for InternalData {
+            fn lerp(self, other: Self, t: F) -> Self {
+                Self(
+                    self.0
+                        .lerp(other.0, crate::num_traits::cast::<_, f64>(t).unwrap()),
+                    self.1
+                        .lerp(other.1, crate::num_traits::cast::<_, f32>(t).unwrap()),
+                )
+            }
+        }
+
+        #[derive(PartialEq, Debug)]
+        struct Data {
+            a: InternalData,
+            b: f32,
+        };
+
+        impl<F: crate::Float> Lerp<F> for Data {
+            fn lerp(self, other: Self, t: F) -> Self {
+                Self {
+                    a: self.a.lerp(other.a, t),
+                    b: self
+                        .b
+                        .lerp(other.b, crate::num_traits::cast::<_, f32>(t).unwrap()),
+                }
+            }
+        }
+
+        assert_eq!(
+            round(
+                &Data {
+                    a: InternalData(0.0, 1.0),
+                    b: 1.0
+                }
+                .lerp(
+                    Data {
+                        a: InternalData(1.0, 0.0),
+                        b: 0.0
+                    },
+                    0.5
+                )
+            ),
+            round(&Data {
+                a: InternalData(0.5, 0.5),
+                b: 0.5
+            })
+        );
+        assert_eq!(
+            round(
+                &Data {
+                    a: InternalData(0.0, 1.0),
+                    b: 1.0
+                }
+                .lerp(
+                    Data {
+                        a: InternalData(1.0, 0.0),
+                        b: 0.0
+                    },
+                    0.9
+                )
+            ),
+            round(&Data {
+                a: InternalData(0.9, 0.1),
+                b: 0.1
+            })
         );
     }
 }
