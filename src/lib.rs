@@ -378,11 +378,11 @@ mod test {
             b: f64,
         };
 
-        impl Lerp<f64> for Data {
-            fn lerp(self, other: Self, t: f64) -> Self {
+        impl<F: crate::Float> Lerp<F> for Data {
+            fn lerp(self, other: Self, t: F) -> Self {
                 Self {
-                    a: self.a.lerp(other.a, t),
-                    b: self.b.lerp(other.b, t),
+                    a: self.a.lerp(other.a, crate::num_traits::cast::<_, f64>(t).unwrap()),
+                    b: self.b.lerp(other.b, crate::num_traits::cast::<_, f64>(t).unwrap()),
                 }
             }
         }
@@ -405,11 +405,11 @@ mod test {
             b: f32,
         };
 
-        impl Lerp<f64> for Data {
-            fn lerp(self, other: Self, t: f64) -> Self {
+        impl<F: crate::Float> Lerp<F> for Data {
+            fn lerp(self, other: Self, t: F) -> Self {
                 Self {
-                    a: self.a.lerp(other.a, t),
-                    b: self.b.lerp(other.b, t as f32),
+                    a: self.a.lerp(other.a, crate::num_traits::cast::<_, f64>(t).unwrap()),
+                    b: self.b.lerp(other.b, crate::num_traits::cast::<_, f32>(t).unwrap()),
                 }
             }
         }
