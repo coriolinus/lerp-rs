@@ -13,7 +13,7 @@ mod derive;
 /// either f64 or f32. They can not mix
 ///
 /// This derive implementation will lerp each field of the struct independently
-#[proc_macro_derive(Lerp)]
+#[proc_macro_derive(Lerp, attributes(lerp))]
 pub fn lerp_derive(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as ItemStruct);
 
