@@ -5,8 +5,8 @@ use syn::{
     parse_quote,
     punctuated::Punctuated,
     spanned::Spanned,
-    Attribute, Error, Field, Fields, Index, ItemStruct, Result, Token, Type, TypeGroup, TypeParen,
-    TypePath, TypeReference,
+    Attribute, Error, Field, Fields, Index, ItemStruct, Path, Result, Token, Type, TypeGroup,
+    TypeParen, TypePath, TypeReference,
 };
 
 enum LerpType {
@@ -23,14 +23,14 @@ struct LerpAttributes {
 
 impl Parse for LerpAttributes {
     fn parse(input: ParseStream) -> Result<Self> {
-        let inputs = Punctuated::<TypePath, Token![,]>::parse_terminated(input)?;
+        let inputs = Punctuated::<Path, Token![,]>::parse_terminated(input)?;
 
         let mut skip = None;
         let mut type_override = None;
 
-        for TypePath { path, .. } in inputs {
-            if path.is_ident("skip") {
-                if skip.is_none() {
+        for path in inputs {
+            if path.is_ident("skip") || path.is_ident("ignore") {
+                if skip.is_some() {
                     return Err(Error::new(path.span(), "duplicate skip statement"));
                 }
 
@@ -53,7 +53,7 @@ impl Parse for LerpAttributes {
     }
 }
 
-fn get_lerp_type(ty: &Type, attrs: &Vec<Attribute>) -> Result<LerpType> {
+fn get_lerp_type(ty: &Type, attrs: &Vec<Attribute>) -> syn::Result<LerpType> {
     match ty {
         Type::Path(TypePath { path, .. }) => {
             let attr = attrs
@@ -63,9 +63,7 @@ fn get_lerp_type(ty: &Type, attrs: &Vec<Attribute>) -> Result<LerpType> {
 
             let attr: LerpAttributes = match &attr[..] {
                 [] => Ok(Default::default()),
-                [Attribute { tokens, .. }] => {
-                    syn::parse(proc_macro::TokenStream::from(tokens.clone()))
-                }
+                [attr] => attr.parse_args(),
                 [_, overflow, ..] => Err(Error::new(
                     overflow.span(),
                     "found duplicate attribute on field, consolidate the attributes into one",
@@ -108,10 +106,10 @@ fn get_lerp_type(ty: &Type, attrs: &Vec<Attribute>) -> Result<LerpType> {
     }
 }
 
-pub fn lerp_derive_internal(input: ItemStruct) -> Result<TokenStream> {
+pub fn lerp_derive_internal(input: &ItemStruct) -> Result<TokenStream> {
     let name = &input.ident;
 
-    match input.fields {
+    match &input.fields {
         Fields::Named(fields) => {
             let fields = fields
                 .named
@@ -148,7 +146,7 @@ pub fn lerp_derive_internal(input: ItemStruct) -> Result<TokenStream> {
                         ))
                     }
                 })
-                .collect::<Result<Vec<_>>>()?;
+                .collect::<syn::Result<Vec<_>>>()?;
 
             Ok(quote! {
                 #[automatically_derived]
