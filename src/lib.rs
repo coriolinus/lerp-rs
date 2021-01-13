@@ -1,6 +1,5 @@
 //! Linear interpolation and extrapolation traits.
 #![doc(html_root_url = "https://coriolinus.github.io/lerp-rs/")]
-
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
 
@@ -238,4 +237,3 @@ extern crate lerp_derive;
 #[cfg(feature = "derive")]
 #[doc(hidden)]
 pub use lerp_derive::*;
-

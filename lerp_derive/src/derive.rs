@@ -1,48 +1,39 @@
 use proc_macro2::TokenStream;
-use quote::quote;
+use quote::{quote, ToTokens};
 use syn::{
     parse::{Parse, ParseStream},
-    parse_quote,
     punctuated::Punctuated,
     spanned::Spanned,
-    Attribute, Error, Field, Fields, Index, ItemStruct, Path, Result, Token, Type, TypeGroup,
-    TypeParen, TypePath, TypeReference,
+    Attribute, Error, Field, Fields, Index, ItemStruct, Path, Result, Token, Type, TypeArray,
+    TypeGroup, TypeParen, TypePath, TypeReference, TypeTuple,
 };
-
-enum LerpType {
-    Type(TypePath),
-    Generic,
-    Skip,
-}
 
 #[derive(Default)]
 struct LerpAttributes {
-    skip: Option<()>,
-    type_override: Option<TypePath>,
+    skip: bool,
+    type_override: Option<Path>,
 }
 
 impl Parse for LerpAttributes {
     fn parse(input: ParseStream) -> Result<Self> {
         let inputs = Punctuated::<Path, Token![,]>::parse_terminated(input)?;
 
-        let mut skip = None;
+        let mut skip = false;
         let mut type_override = None;
 
         for path in inputs {
             if path.is_ident("skip") || path.is_ident("ignore") {
-                if skip.is_some() {
+                if skip {
                     return Err(Error::new(path.span(), "duplicate skip statement"));
                 }
 
-                skip = Some(());
+                skip = true;
             } else {
                 if type_override.is_some() {
                     return Err(Error::new(path.span(), "duplicate occurrence of lerp type"));
                 }
 
-                type_override = Some(parse_quote! {
-                    #path
-                });
+                type_override = Some(path);
             }
         }
 
@@ -53,39 +44,84 @@ impl Parse for LerpAttributes {
     }
 }
 
-fn get_lerp_type(ty: &Type, attrs: &Vec<Attribute>) -> syn::Result<LerpType> {
+fn lerp_field(name: &dyn ToTokens, ty: &Type, attrs: &Vec<Attribute>) -> syn::Result<TokenStream> {
+    let attr = attrs
+        .into_iter()
+        .filter(|attr| attr.path.is_ident("lerp"))
+        .collect::<Vec<_>>();
+
+    let attr: LerpAttributes = match &attr[..] {
+        [] => Ok(Default::default()),
+        [attr] => attr.parse_args(),
+        [_, overflow, ..] => Err(Error::new(
+            overflow.span(),
+            "found duplicate attribute on field, consolidate the attributes into one",
+        )),
+    }?;
+
     match ty {
-        Type::Path(TypePath { path, .. }) => {
-            let attr = attrs
-                .into_iter()
-                .filter(|attr| attr.path.is_ident("lerp"))
-                .collect::<Vec<_>>();
+        Type::Path(TypePath { path, .. }) => Ok(if attr.skip {
+            quote! {
+                #name: self.#name
+            }
+        } else {
+            let path = attr.type_override.as_ref().unwrap_or(path);
+            
+            if path.is_ident("f64") || path.is_ident("f32") || attr.type_override.is_some() {
+                quote! {
+                    #name: self.#name.lerp(other.#name, cast::<_, #path>(t).unwrap_or_else(|_| panic!("casting any Float to {} should be safe", stringify!(#path))))
+                }
+            } else {
+                quote! {
+                    #name: self.#name.lerp(other.#name, t)
+                }
+            }
+        }),
 
-            let attr: LerpAttributes = match &attr[..] {
-                [] => Ok(Default::default()),
-                [attr] => attr.parse_args(),
-                [_, overflow, ..] => Err(Error::new(
-                    overflow.span(),
-                    "found duplicate attribute on field, consolidate the attributes into one",
-                )),
+        Type::Array(TypeArray { elem, len, .. }) => Ok(if attr.skip {
+            quote! {
+                #name: self.#name
+            }
+        } else {
+            let path =  if let Some(o) = &attr.type_override {
+                Ok(o)
+            } else if let Type::Path(TypePath { ref path, .. }) = **elem {
+                Ok(path)
+            } else {
+                Err(Error::new(
+                    elem.span(),
+                    "lerp(Derive) does not support nested arrays",
+                ))
             }?;
+            
+            let lerp = if path.is_ident("f64") || path.is_ident("f32") || attr.type_override.is_some() {
+                quote! {
+                    self_value.lerp(other_value, cast::<_, #path>(t).unwrap_or_else(|_| panic!("casting any Float to {} should be safe", stringify!(#path))))
+                }
+            } else {
+                quote! {
+                    self_value.lerp(other_value, t)
+                }
+            };
 
-            if attr.skip.is_some() {
-                return Ok(LerpType::Skip);
+            quote! {
+                #name: {
+                    let arr = [#elem; #len];
+
+                    for i in 0..arr.len() {
+                        let self_value = self.#name[i];
+                        let other_value = self.#name[i];
+
+                        arr[i] = #lerp;
+                    }
+
+                    arr
+                }
             }
 
-            Ok(if let Some(override_type) = attr.type_override {
-                LerpType::Type(override_type)
-            } else {
-                if path.is_ident("f64") || path.is_ident("f32") {
-                    LerpType::Type(parse_quote! { #path })
-                } else {
-                    LerpType::Generic
-                }
-            })
-        }
+        }),
 
-        Type::Array(_) => {
+        Type::Tuple(TypeTuple { elems, .. }) => {
             todo!()
         } // TODO: ?
 
@@ -93,14 +129,10 @@ fn get_lerp_type(ty: &Type, attrs: &Vec<Attribute>) -> syn::Result<LerpType> {
             todo!()
         } // TODO: ?
 
-        Type::Tuple(_) => {
-            todo!()
-        } // TODO: ?
-
         // Recursively descend through groups and references
         Type::Group(TypeGroup { elem, .. })
         | Type::Paren(TypeParen { elem, .. })
-        | Type::Reference(TypeReference { elem, .. }) => get_lerp_type(elem, attrs),
+        | Type::Reference(TypeReference { elem, .. }) => lerp_field(name, elem, attrs),
 
         _ => Err(Error::new(ty.span(), "Unsupported type")),
     }
@@ -122,23 +154,7 @@ pub fn lerp_derive_internal(input: &ItemStruct) -> Result<TokenStream> {
                         ..
                     } = f
                     {
-                        let lerp_type = get_lerp_type(ty, attrs)?;
-
-                        Ok(match lerp_type {
-                            LerpType::Type(ty) => quote! {
-                                #name: self.#name.lerp(other.#name, lerp::num_traits::cast::<_, #ty>(t).expect("casting any Float to #ty should be safe"))
-                            },
-                            LerpType::Generic => {
-                                quote! {
-                                    #name: self.#name.lerp(other.#name, t)
-                                }
-                            },
-                            LerpType::Skip => {
-                                quote! {
-                                    #name: self.#name
-                                }
-                            }
-                        })
+                        lerp_field(&name, ty, attrs)
                     } else {
                         Err(Error::new(
                             f.ident.span(),
@@ -160,47 +176,24 @@ pub fn lerp_derive_internal(input: &ItemStruct) -> Result<TokenStream> {
             })
         }
         Fields::Unnamed(fields) => {
-            let fields =  fields.unnamed.iter()
-           .enumerate()
-            .map(|(i, f)| {
-                let Field {
-                    attrs,
-                    ty,
-                    ..
-                } = f;
+            let fields = fields
+                .unnamed
+                .iter()
+                .enumerate()
+                .map(|(i, f)| {
+                    let name = Index::from(i);
 
-                let lerp_type = get_lerp_type(ty, attrs)?;
-
-                Ok(match lerp_type {
-                    LerpType::Type(ty) => {
-                        let name = Index::from(i);
-
-                        quote! {
-                            #name: self.#name.lerp(other.#name, lerp::num_traits::cast::<_, #ty>(t).expect("casting any Float to #ty should be safe"))
-                        }
-                    },
-                    LerpType::Generic => {
-                        let name = Index::from(i);
-
-                        quote! {
-                            #name: self.#name.lerp(other.#name, t)
-                        }
-                    },
-                    LerpType::Skip => {
-                        let name = Index::from(i);
-
-                        quote! {
-                            #name: self.#name
-                        }
-                    }
+                    lerp_field(&name, &f.ty, &f.attrs)
                 })
-            })
-            .collect::<Result<Vec<_>>>()?;
+                .collect::<Result<Vec<_>>>()?;
 
             Ok(quote! {
                 #[automatically_derived]
                 impl<F: ::lerp::num_traits::Float> Lerp<F> for #name {
                     fn lerp(self, other: Self, t: F) -> Self {
+                        #![allow(unused)]
+                        use lerp::num_traits::cast;
+
                         Self {
                             #(#fields),*
                         }

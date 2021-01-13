@@ -5,8 +5,8 @@
 #![warn(missing_docs)]
 
 use proc_macro::TokenStream;
-use syn::{parse_macro_input, ItemStruct};
 use quote::quote;
+use syn::{parse_macro_input, ItemStruct};
 
 mod derive;
 
@@ -22,7 +22,7 @@ pub fn lerp_derive(input: TokenStream) -> TokenStream {
         .unwrap_or_else(|err| {
             let err = err.to_compile_error();
             let name = input.ident;
-        
+
             // On a compile error, produce the most generic implementation to remove
             // any type errors about the trait not being implemented, and instead move
             // the focus to the error produced by the macro

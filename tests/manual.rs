@@ -1,6 +1,9 @@
-use lerp::{Lerp, num_traits::{Float, cast}};
-use std::fmt::Debug;
 use common::round;
+use lerp::{
+    num_traits::{cast, Float},
+    Lerp,
+};
+use std::fmt::Debug;
 
 mod common;
 
@@ -15,12 +18,8 @@ fn manual() {
     impl<F: Float> Lerp<F> for Data {
         fn lerp(self, other: Self, t: F) -> Self {
             Self {
-                a: self
-                    .a
-                    .lerp(other.a, cast::<_, f64>(t).unwrap()),
-                b: self
-                    .b
-                    .lerp(other.b, cast::<_, f64>(t).unwrap()),
+                a: self.a.lerp(other.a, cast::<_, f64>(t).unwrap()),
+                b: self.b.lerp(other.b, cast::<_, f64>(t).unwrap()),
             }
         }
     }
@@ -46,12 +45,8 @@ fn manual_mix() {
     impl<F: crate::Float> Lerp<F> for Data {
         fn lerp(self, other: Self, t: F) -> Self {
             Self {
-                a: self
-                    .a
-                    .lerp(other.a, cast::<_, f64>(t).unwrap()),
-                b: self
-                    .b
-                    .lerp(other.b, cast::<_, f32>(t).unwrap()),
+                a: self.a.lerp(other.a, cast::<_, f64>(t).unwrap()),
+                b: self.b.lerp(other.b, cast::<_, f32>(t).unwrap()),
             }
         }
     }
@@ -74,10 +69,8 @@ fn manual_nested() {
     impl<F: crate::Float> Lerp<F> for InternalData {
         fn lerp(self, other: Self, t: F) -> Self {
             Self(
-                self.0
-                    .lerp(other.0, cast::<_, f64>(t).unwrap()),
-                self.1
-                    .lerp(other.1, cast::<_, f32>(t).unwrap()),
+                self.0.lerp(other.0, cast::<_, f64>(t).unwrap()),
+                self.1.lerp(other.1, cast::<_, f32>(t).unwrap()),
             )
         }
     }
@@ -92,9 +85,7 @@ fn manual_nested() {
         fn lerp(self, other: Self, t: F) -> Self {
             Self {
                 a: self.a.lerp(other.a, t),
-                b: self
-                    .b
-                    .lerp(other.b, cast::<_, f32>(t).unwrap()),
+                b: self.b.lerp(other.b, cast::<_, f32>(t).unwrap()),
             }
         }
     }
@@ -137,4 +128,17 @@ fn manual_nested() {
             b: 0.1
         })
     );
+}
+
+#[test]
+fn manual_array() {
+    struct Array([f64; 5]);
+
+    impl<F: Float> Lerp<F> for Array {
+        fn lerp(self, other: Self, t: F) -> Self {
+            let arr = [f64; 5]; // bruh
+
+            Self()
+        }
+    }
 }

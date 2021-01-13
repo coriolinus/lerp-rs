@@ -200,3 +200,13 @@ fn nested_manual_impl() {
         })
     );
 }
+
+#[test]
+fn derive_tuple_array() {
+    const NUMBER: usize = 1;
+
+    #[derive(Lerp)]
+    struct Array([f64; 36 + 2 * NUMBER]);
+
+    
+}
