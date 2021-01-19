@@ -129,16 +129,3 @@ fn manual_nested() {
         })
     );
 }
-
-#[test]
-fn manual_array() {
-    struct Array([f64; 5]);
-
-    impl<F: Float> Lerp<F> for Array {
-        fn lerp(self, other: Self, t: F) -> Self {
-            let arr = [f64; 5]; // bruh
-
-            Self()
-        }
-    }
-}

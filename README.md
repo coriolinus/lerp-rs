@@ -1,4 +1,5 @@
 # Lerp
+
 [![Build Status](https://travis-ci.org/coriolinus/lerp-rs.svg?branch=master)](https://travis-ci.org/coriolinus/lerp-rs)
 
 Linear interpolation and iteration, automatically implemented over most
@@ -37,11 +38,19 @@ work for them as well.
 
 As well as working for individual float values, the crate also provides a derive
 macro, available with the `derive` feature, which will be able to generate an
-implementation automatically. In order to use the derive macro, your structures must
-have only float type fields and all fields much be the same type (all f64 or all f32).
+implementation automatically.
 
-The automatic lerp derivation will simply lerp each of the fields and works on both
-named and tuple type structs.
+This derive implementation will lerp each field of the struct independently
+and assumes a generic implementation of Lerp over `Float` types. If any
+of the fields is generic only over one of the float values (f32, f64) that
+can be specified by the `#[lerp(f32)]` or `#[lerp(f64)]` attributes respectively.
+
+If you would like for the lerp implementation to ignore a field (or if it does
+not derive lerp) you can use the `#[lerp(skip)]` attribute which will produce
+the value, untouched from the left value.
+
+Not all types are supported in this derive macro. See [the github issue] for
+discussion and more information.
 
 ```toml
 [dependencies]
@@ -63,13 +72,18 @@ assert_eq!(
 );
 ```
 
+More derive examples can be seen in the [tests]
+
 ## Usage
 
 ```toml
 [dependencies]
-lerp = "0.1"
+lerp = "0.4"
 ```
 
 ## Documentation
 
 Auto-built from Travis: <https://coriolinus.github.io/lerp-rs/>
+
+[the github issue]: https://github.com/coriolinus/lerp-rs/issues/6
+[tests]: https://github.com/coriolinus/lerp-rs/tree/master/tests/derive.rs

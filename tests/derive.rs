@@ -128,18 +128,18 @@ fn named_skip() {
     #[derive(PartialEq, Debug, Lerp)]
     struct Data {
         #[lerp(skip)]
-        a: f64,
+        a: String,
         #[lerp(ignore)]
         b: f32,
     }
 
     assert_eq!(
-        round(&Data { a: 0.0, b: 1.0 }.lerp(Data { a: 1.0, b: 0.0 }, 0.5)),
-        round(&Data { a: 0.0, b: 1.0 })
+        round(&Data { a: "a".into(), b: 1.0 }.lerp(Data { a: "bb".into(), b: 0.0 }, 0.5)),
+        round(&Data { a: "a".into(), b: 1.0 })
     );
     assert_eq!(
-        round(&Data { a: 0.0, b: 1.0 }.lerp(Data { a: 1.0, b: 0.0 }, 0.9)),
-        round(&Data { a: 0.0, b: 1.0 })
+        round(&Data { a: "aa".into(), b: 1.0 }.lerp(Data { a: "b".into(), b: 0.0 }, 0.9)),
+        round(&Data { a: "aa".into(), b: 1.0 })
     );
 }
 
@@ -199,14 +199,4 @@ fn nested_manual_impl() {
             b: 0.1
         })
     );
-}
-
-#[test]
-fn derive_tuple_array() {
-    const NUMBER: usize = 1;
-
-    #[derive(Lerp)]
-    struct Array([f64; 36 + 2 * NUMBER]);
-
-    
 }

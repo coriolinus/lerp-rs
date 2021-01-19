@@ -10,10 +10,21 @@ use syn::{parse_macro_input, ItemStruct};
 
 mod derive;
 
-/// Automatically derive the Lerp trait for any struct with homogeneous float fields,
-/// either f64 or f32. They can not mix
+/// Automatically derive the Lerp trait for any struct fields that derive lerp
 ///
 /// This derive implementation will lerp each field of the struct independently
+/// and assumes a generic implementation of Lerp over `Float` types. If any
+/// of the fields is generic only over one of the float values (f32, f64) that
+/// can be specified by the `#[lerp(f32)]` or `#[lerp(f64)]` attributes respectively.
+///
+/// If you would like for the lerp implementation to ignore a field (or if it does
+/// not derive lerp) you can use the `#[lerp(skip)]` attribute which will produce
+/// the value, untouched from the left value.
+///
+/// Not all types are supported in this derive macro. See [the github issue] for
+/// discussion and more information
+///
+/// [the github issue]: https://github.com/coriolinus/lerp-rs/issues/6
 #[proc_macro_derive(Lerp, attributes(lerp))]
 pub fn lerp_derive(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as ItemStruct);
