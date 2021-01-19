@@ -18,8 +18,8 @@ mod derive;
 /// can be specified by the `#[lerp(f32)]` or `#[lerp(f64)]` attributes respectively.
 ///
 /// If you would like for the lerp implementation to ignore a field (or if it does
-/// not derive lerp) you can use the `#[lerp(skip)]` attribute which will produce
-/// the value, untouched from the left value.
+/// not derive lerp) you can use the `#[lerp(skip)]` or `#[lerp(ignore)]` attributes
+/// which will produce the value, untouched from the left value.
 ///
 /// Not all types are supported in this derive macro. See [the github issue] for
 /// discussion and more information
