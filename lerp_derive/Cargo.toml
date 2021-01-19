@@ -1,7 +1,10 @@
 [package]
-name = "lerp"
-version = "0.3.0"
-authors = ["coriolinus <coriolinus@gmail.com>"]
+name = "lerp_derive"
+version = "0.1.0"
+authors = [
+    "coriolinus <coriolinus@gmail.com>",
+    "Zachary Kohnen <14093962+DusterTheFirst@users.noreply.github.com>",
+]
 description = "Generic linear interpolation and extrapolation, automatically implemented for a variety of numeric types."
 repository = "https://github.com/coriolinus/lerp-rs"
 documentation = "https://coriolinus.github.io/lerp-rs/"
@@ -11,12 +14,9 @@ keywords = ["lerp", "math", "interpolate", "extrapolate", "numeric"]
 edition = "2018"
 
 [dependencies]
-num-traits = "0.2"
-lerp_derive = { path = "./lerp_derive", optional = true }
+syn = { version = "1.0", features = ["full"] }
+quote = "1.0"
+proc-macro2 = "1.0"
 
-[features]
-default = []
-derive = ["lerp_derive"]
-
-[workspace]
-members = ["lerp_derive"]
+[lib]
+proc-macro = true

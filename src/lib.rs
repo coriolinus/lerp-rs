@@ -1,12 +1,14 @@
 //! Linear interpolation and extrapolation traits.
 #![doc(html_root_url = "https://coriolinus.github.io/lerp-rs/")]
+#![forbid(unsafe_code)]
+#![warn(missing_docs)]
 
-extern crate num_traits;
-
+use num_traits::{Float, One, Zero};
 use std::iter;
-use std::iter::{Skip, Chain, Once};
+use std::iter::{Chain, Once, Skip};
 use std::ops::{Add, Mul};
-use num_traits::{Float, Zero, One};
+
+pub use num_traits;
 
 /// Types which are amenable to linear interpolation and extrapolation.
 ///
@@ -79,8 +81,9 @@ pub trait Lerp<F> {
     /// assert_eq!(3.0.lerp_bounded(5.0, -2.0), 3.0);
     /// ```
     fn lerp_bounded(self, other: Self, t: F) -> Self
-        where Self: Sized,
-              F: PartialOrd + Copy + Zero + One
+    where
+        Self: Sized,
+        F: PartialOrd + Copy + Zero + One,
     {
         let t = match t {
             t if t < F::zero() => F::zero(),
@@ -109,7 +112,9 @@ pub trait LerpIter {
     /// let items: Vec<_> = 3.0_f64.lerp_iter(5.0, 4).collect();
     /// assert_eq!(vec![3.0, 3.5, 4.0, 4.5], items);
     /// ```
-    fn lerp_iter(self, other: Self, steps: usize) -> LerpIterator<Self> where Self: Sized;
+    fn lerp_iter(self, other: Self, steps: usize) -> LerpIterator<Self>
+    where
+        Self: Sized;
 
     /// Create an iterator which lerps from `self` to `other`.
     ///
@@ -124,19 +129,25 @@ pub trait LerpIter {
     ///
     /// assert_eq!(vec![3.0, 5.0], 3.0_f64.lerp_iter_closed(5.0, 2).collect::<Vec<f64>>());
     /// ```
-    fn lerp_iter_closed(self,
-                        other: Self,
-                        steps: usize)
-                        -> Skip<Chain<LerpIterator<Self>, Once<Self>>>
-        where Self: Copy,
-              LerpIterator<Self>: Iterator<Item = Self>
+    fn lerp_iter_closed(
+        self,
+        other: Self,
+        steps: usize,
+    ) -> Skip<Chain<LerpIterator<Self>, Once<Self>>>
+    where
+        Self: Copy,
+        LerpIterator<Self>: Iterator<Item = Self>,
     {
         // reduce the number of times we consume the sub-iterator,
         // because we unconditionally add an element to the end.
         if steps == 0 {
-            LerpIterator::new(self, other, steps).chain(iter::once(other)).skip(1)
+            LerpIterator::new(self, other, steps)
+                .chain(iter::once(other))
+                .skip(1)
         } else {
-            LerpIterator::new(self, other, steps - 1).chain(iter::once(other)).skip(0)
+            LerpIterator::new(self, other, steps - 1)
+                .chain(iter::once(other))
+                .skip(0)
         }
     }
 }
@@ -153,8 +164,9 @@ pub trait LerpIter {
 /// numbers, vectors, and other types which may be multiplied by a
 /// scalar while retaining their own type.
 impl<T, F> Lerp<F> for T
-    where T: Add<Output = T> + Mul<F, Output = T>,
-          F: Float
+where
+    T: Add<Output = T> + Mul<F, Output = T>,
+    F: Float,
 {
     fn lerp(self, other: T, t: F) -> T {
         self * (F::one() - t) + other * t
@@ -162,7 +174,8 @@ impl<T, F> Lerp<F> for T
 }
 
 impl<T> LerpIter for T
-    where T: Lerp<f64> + Sized
+where
+    T: Lerp<f64> + Sized,
 {
     fn lerp_iter(self, other: T, steps: usize) -> LerpIterator<T> {
         LerpIterator::new(self, other, steps)
@@ -180,16 +193,17 @@ pub struct LerpIterator<T> {
 impl<T> LerpIterator<T> {
     fn new(begin: T, end: T, steps: usize) -> LerpIterator<T> {
         LerpIterator {
-            begin: begin,
-            end: end,
-            steps: steps,
+            begin,
+            end,
+            steps,
             current_step: 0,
         }
     }
 }
 
 impl<T> Iterator for LerpIterator<T>
-    where T: Lerp<f64> + Copy
+where
+    T: Lerp<f64> + Copy,
 {
     type Item = T;
 
@@ -214,3 +228,12 @@ impl<T> Iterator for LerpIterator<T>
 }
 
 impl<T> ExactSizeIterator for LerpIterator<T> where T: Lerp<f64> + Copy {}
+
+#[cfg(feature = "derive")]
+#[allow(unused_imports)]
+#[macro_use]
+extern crate lerp_derive;
+
+#[cfg(feature = "derive")]
+#[doc(hidden)]
+pub use lerp_derive::*;
