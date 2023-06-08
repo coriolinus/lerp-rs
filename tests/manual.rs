@@ -9,7 +9,7 @@ mod common;
 
 #[test]
 fn manual() {
-    #[derive(PartialEq, Debug)]
+    #[derive(PartialEq, Debug, Clone, Copy)]
     struct Data {
         a: f64,
         b: f64,
@@ -29,7 +29,23 @@ fn manual() {
         round(&Data { a: 0.5, b: 0.5 })
     );
     assert_eq!(
+        {
+            let mut result = Data { a: 0.0, b: 1.0 };
+            result.lerp_to(Data { a: 1.0, b: 0.0 }, 0.5);
+            round(&result)
+        },
+        round(&Data { a: 0.5, b: 0.5 })
+    );
+    assert_eq!(
         round(&Data { a: 0.0, b: 1.0 }.lerp(Data { a: 1.0, b: 0.0 }, 0.9)),
+        round(&Data { a: 0.9, b: 0.1 })
+    );
+    assert_eq!(
+        {
+            let mut result = Data { a: 0.0, b: 1.0 };
+            result.lerp_to(Data { a: 1.0, b: 0.0 }, 0.9);
+            round(&result)
+        },
         round(&Data { a: 0.9, b: 0.1 })
     );
 }
