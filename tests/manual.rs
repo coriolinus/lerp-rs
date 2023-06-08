@@ -13,7 +13,7 @@ fn manual() {
     struct Data {
         a: f64,
         b: f64,
-    };
+    }
 
     impl<F: Float> Lerp<F> for Data {
         fn lerp(self, other: Self, t: F) -> Self {
@@ -56,7 +56,7 @@ fn manual_mix() {
     struct Data {
         a: f64,
         b: f32,
-    };
+    }
 
     impl<F: crate::Float> Lerp<F> for Data {
         fn lerp(self, other: Self, t: F) -> Self {
@@ -95,7 +95,7 @@ fn manual_nested() {
     struct Data {
         a: InternalData,
         b: f32,
-    };
+    }
 
     impl<F: crate::Float> Lerp<F> for Data {
         fn lerp(self, other: Self, t: F) -> Self {
