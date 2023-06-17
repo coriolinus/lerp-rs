@@ -92,6 +92,23 @@ pub trait Lerp<F> {
         };
         self.lerp(other, t)
     }
+
+    /// Mutating variant of [`Lerp::lerp`].
+    fn lerp_to(&mut self, other: Self, t: F)
+    where
+        Self: Sized + Copy,
+    {
+        *self = self.lerp(other, t);
+    }
+
+    /// Mutating variant of [`Lerp::lerp_bounded`].
+    fn lerp_bounded_to(&mut self, other: Self, t: F)
+    where
+        Self: Sized + Copy,
+        F: PartialOrd + Copy + Zero + One,
+    {
+        *self = self.lerp_bounded(other, t);
+    }
 }
 
 /// Types which can construct a lerping iterator from one point to another
