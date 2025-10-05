@@ -1,0 +1,25 @@
+name: Rust
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        command:
+          - cargo check
+          - cargo test
+        features:
+          - ""
+          - --no-default-features
+          - --all-features
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - run: ${{ matrix.command }} ${{ matrix.features }}
