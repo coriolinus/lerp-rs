@@ -162,6 +162,17 @@ pub trait LerpIter {
                 .chain(iter::once(other))
                 .skip(1)
         } else {
+            // we need this (otherwise pointless) `.skip(0)` call for structural reasons:
+            // this method returns an explicitly named iterator combinator instead of `impl Iterator`,
+            // and the skip is required in order for the patterns to match.
+            //
+            // even if we were to erase the type with `impl Iterator`, we still need to return the same
+            // type from both branches of the if statement here, which means we need the skip.
+            //
+            // we could avoid the problem by having both branches of the if statement return a
+            // `Box<dyn Iterator<...>>`, but that allocation is pointless, given the perfectly good
+            // workaround already used here.
+            #[allow(clippy::iter_skip_zero)]
             LerpIterator::new(self, other, steps - 1)
                 .chain(iter::once(other))
                 .skip(0)
@@ -235,11 +246,7 @@ where
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let remaining = if self.current_step >= self.steps {
-            0
-        } else {
-            self.steps - self.current_step
-        };
+        let remaining = self.steps.saturating_sub(self.current_step);
         (remaining, Some(remaining))
     }
 }
