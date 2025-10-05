@@ -46,7 +46,7 @@ impl Parse for LerpAttributes {
 
 fn lerp_field(name: &dyn ToTokens, ty: &Type, attrs: &Vec<Attribute>) -> syn::Result<TokenStream> {
     let attr = attrs
-        .into_iter()
+        .iter()
         .filter(|attr| attr.path.is_ident("lerp"))
         .collect::<Vec<_>>();
 
